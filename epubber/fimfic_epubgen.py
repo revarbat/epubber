@@ -18,6 +18,7 @@ class BodyFileHtmlParser(HTMLParser):
     _item_data = ''
     _chapter_title = ''
     _chapter_cb = None
+    _image_cb = None
     self_closing_tags = [ 'br', 'hr', 'img', 'meta', 'link', 'input' ]
 
     def __init__(self):
@@ -27,6 +28,7 @@ class BodyFileHtmlParser(HTMLParser):
         self._item_data = ''
         self._chapter_title = ''
         self._chapter_cb = None
+        self._image_cb = None
         HTMLParser.__init__(self)
 
     def _esc(self, s):
@@ -52,6 +54,9 @@ class BodyFileHtmlParser(HTMLParser):
 
     def set_chapter_cb(self, cb):
         self._chapter_cb = cb
+
+    def set_image_cb(self, cb):
+        self._image_cb = cb
 
     def chapter_complete(self):
         chaptitle = self._chapter_title.strip()
@@ -94,7 +99,7 @@ class BodyFileHtmlParser(HTMLParser):
             newattrs = []
             for key,val in attrs:
                 if key.lower() == 'src':
-                    val = self.add_image(val)
+		    val = self._image_cb(val)
                 newattrs.append( (key,val) )
             attrs = newattrs
         if tag in self.self_closing_tags:
@@ -359,6 +364,7 @@ class FimFictionEPubGenerator(ePubGenerator):
 
         bfhp = BodyFileHtmlParser()
         bfhp.set_chapter_cb(self.add_fim_chapter)
+        bfhp.set_image_cb(self.add_image)
         bfhp.feed(indata)
         return
 
