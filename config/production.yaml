@@ -1,0 +1,16 @@
+debug:
+  enabled: True
+  server:
+    host: belfry.com
+    port: 8001
+flask:
+  init:
+    import_name: epubber
+  secret_key: gMbicGWXQe5N1yVmr5wpiDjgohaVkQEh3dmHJRSWIk
+  SESSION_COOKIE_SECURE: True
+  config:
+    SESSION_COOKIE_SECURE: True
+  sessions_path: sessions
+  sessions_timeout: 3600
+views: [epubber.views.main]
+

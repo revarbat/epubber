@@ -1,0 +1,17 @@
+{% extends "_layout.html" %}
+{% set subtitle = 'Select Story' %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block content %}
+  <form action="" method="GET" class="form-horizontal">
+    <h3>Enter the story number or URL below:</h2>
+    <dl>
+      <input name="story" />
+    </dl>
+    <p><input type="submit" value="Make ePub" /></p>
+  </form>
+{% endblock %}
+
+{% block script %}{{ super() }}
+{% endblock %}
+
