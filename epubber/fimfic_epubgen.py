@@ -306,9 +306,9 @@ class FimFictionEPubGenerator(ePubGenerator):
         resp = None
         for retry in range(3):
             resp = requests.get(desc_url)
-            if resp.code == 200:
+            if resp.status_code == 200:
                 break
-            if resp.code == 404:
+            if resp.status_code == 404:
                 break
             time.sleep(2*(2**retry))
 
@@ -318,7 +318,7 @@ class FimFictionEPubGenerator(ePubGenerator):
         categories = []
         characters = []
         data = {}
-        if resp.code == 200:
+        if resp.status_code == 200:
             for m in re.finditer(metapat, resp.text, re.I):
                 data[m.group(1)] = m.group(2).strip()
             for m in re.finditer(url_pat, resp.text, re.I):
@@ -375,16 +375,16 @@ class FimFictionEPubGenerator(ePubGenerator):
         resp = None
         for retry in range(3):
             resp = requests.get(body_url)
-            if resp.code == 200:
+            if resp.status_code == 200:
                 break
-            if resp.code == 404:
+            if resp.status_code == 404:
                 break
             time.sleep(2*(2**retry))
 
         if resp is None:
             return
 
-        if resp.code == 200:
+        if resp.status_code == 200:
             indata = resp.text.encode(resp.encoding)
             bfhp = BodyFileHtmlParser()
             bfhp.set_chapter_cb(self.add_fim_chapter)

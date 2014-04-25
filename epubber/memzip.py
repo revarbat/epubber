@@ -30,9 +30,9 @@ class MemZip():
         resp = None
         for retry in range(3):
             resp = requests.get(url, stream=True)
-            if resp.code == 200:
+            if resp.status_code == 200:
                 break
-            if resp.code == 404:
+            if resp.status_code == 404:
                 break
             time.sleep(2*(2**retry))
         if not resp:
