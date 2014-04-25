@@ -37,15 +37,16 @@ class ePubGenerator():
 
 
     def add_file(self, targfile, tagname=None, mimetype='application/xhtml+xml', title=None, data=None, filename=None, url=None):
+        succ = False
         if data:
-            self.mem_zip.add_file_from_data(targfile, data)
+            succ = self.mem_zip.add_file_from_data(targfile, data)
         elif url:
-            self.mem_zip.add_file_from_url(targfile, url)
+            succ = self.mem_zip.add_file_from_url(targfile, url)
         elif filename:
-            self.mem_zip.add_file(targfile, filename)
+            succ = self.mem_zip.add_file(targfile, filename)
         else:
             raise ArgumentError("Must specify one of data, url, or filename")
-        if tagname:
+        if succ and tagname:
             self.manifest_files.append( (tagname, targfile, mimetype) )
             if title:
                 self.contents_index.append( (tagname, targfile, title) )

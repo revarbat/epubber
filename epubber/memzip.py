@@ -1,4 +1,5 @@
 import sys
+import time
 import requests
 import zipfile
 
@@ -19,12 +20,23 @@ class MemZip():
 
     def add_file(self, targfile, filename):
         self.zipFile.write(targfile, filename)
+        return True
 
     def add_file_from_data(self, targfile, data):
         self.zipFile.writestr(targfile, data)
+        return True
 
     def add_file_from_url(self, targfile, url):
-        resp = requests.get(url, stream=True)
+        resp = None
+        for retry in range(3):
+            resp = requests.get(url, stream=True)
+            if resp.code == 200:
+                break
+            if resp.code == 404:
+                break
+            time.sleep(2*(2**retry))
+        if not resp:
+            return False
         if resp.status_code == 200:
             imgdata = BytesIO()
             for chunk in resp.iter_content(1024):
@@ -32,6 +44,8 @@ class MemZip():
             imgdata.seek(0)
             self.zipFile.writestr(targfile, imgdata.getvalue())
             del imgdata
+            return True
+        return False
 
     def finish(self):
         self.zipFile.close()

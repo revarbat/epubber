@@ -99,7 +99,7 @@ class BodyFileHtmlParser(HTMLParser):
             newattrs = []
             for key,val in attrs:
                 if key.lower() == 'src':
-		    val = self._image_cb(val)
+                    val = self._image_cb(val)
                 newattrs.append( (key,val) )
             attrs = newattrs
         if tag in self.self_closing_tags:
@@ -136,10 +136,10 @@ class BodyFileHtmlParser(HTMLParser):
             self._curr_data += data
 
     def handle_entityref(self, name):
-	self.handle_data('&%s;' % name)
+        self.handle_data('&%s;' % name)
 
     def handle_charref(self, name):
-	self.handle_data('&#%s;' % name)
+        self.handle_data('&#%s;' % name)
 
 
 
@@ -302,27 +302,40 @@ class FimFictionEPubGenerator(ePubGenerator):
         catapat = r'class="story_category.*?>(.*?)</a>'
         charpat = r'class="character_icon.*? title="(.*?)"'
         descpat = r'class="description".*?<hr.*?>(.*?)</div>'
-        resp = requests.get(desc_url)
+
+        resp = None
+        for retry in range(3):
+            resp = requests.get(desc_url)
+            if resp.code == 200:
+                break
+            if resp.code == 404:
+                break
+            time.sleep(2*(2**retry))
+
+        if resp is None:
+            return None
 
         categories = []
         characters = []
         data = {}
-        for m in re.finditer(metapat, resp.text, re.I):
-            data[m.group(1)] = m.group(2).strip()
-        for m in re.finditer(url_pat, resp.text, re.I):
-            data['url'] = m.group(1).strip()
-            break
-        for m in re.finditer(authpat, resp.text, re.I):
-            data['author'] = m.group(1).strip()
-            break
-        for m in re.finditer(descpat, resp.text, re.I):
-            data['description'] = m.group(1).strip()
-            break
-        for m in re.finditer(catapat, resp.text, re.I):
-            categories.append(m.group(1).strip())
+        if resp.code == 200:
+            for m in re.finditer(metapat, resp.text, re.I):
+                data[m.group(1)] = m.group(2).strip()
+            for m in re.finditer(url_pat, resp.text, re.I):
+                data['url'] = m.group(1).strip()
+                break
+            for m in re.finditer(authpat, resp.text, re.I):
+                data['author'] = m.group(1).strip()
+                break
+            for m in re.finditer(descpat, resp.text, re.I):
+                data['description'] = m.group(1).strip()
+                break
+            for m in re.finditer(catapat, resp.text, re.I):
+                categories.append(m.group(1).strip())
+            for m in re.finditer(charpat, resp.text, re.I):
+                characters.append(m.group(1).strip())
+
         data['categories'] = ', '.join(categories)
-        for m in re.finditer(charpat, resp.text, re.I):
-            characters.append(m.group(1).strip())
         data['characters'] = ', '.join(characters)
 
         # Jump through XML hoops to unparse entities.
@@ -359,14 +372,24 @@ class FimFictionEPubGenerator(ePubGenerator):
         cht_re = re.compile(r'<h3>(.*)</h3>', re.I)
         img_re = re.compile(r'<img ([^>]*)src="([^"]*)"', re.I)
 
-        resp = requests.get(body_url)
-        indata = resp.text.encode(resp.encoding)
+        resp = None
+        for retry in range(3):
+            resp = requests.get(body_url)
+            if resp.code == 200:
+                break
+            if resp.code == 404:
+                break
+            time.sleep(2*(2**retry))
 
-        bfhp = BodyFileHtmlParser()
-        bfhp.set_chapter_cb(self.add_fim_chapter)
-        bfhp.set_image_cb(self.add_image)
-        bfhp.feed(indata)
-        return
+        if resp is None:
+            return
+
+        if resp.code == 200:
+            indata = resp.text.encode(resp.encoding)
+            bfhp = BodyFileHtmlParser()
+            bfhp.set_chapter_cb(self.add_fim_chapter)
+            bfhp.set_image_cb(self.add_image)
+            bfhp.feed(indata)
 
 
     def add_cover_image(self):
@@ -391,11 +414,15 @@ class FimFictionEPubGenerator(ePubGenerator):
 
     def gen_epub(self):
         epub_file = self.get_metas_from_fimfiction()
+        if epub_file is None:
+            return (None, None)
+
         self.add_cover_image()
         self.add_cover_page()
         self.add_title_page()
         self.add_css_file()
         self.add_chapters()
+
         return (epub_file, self.finish())
 
 
