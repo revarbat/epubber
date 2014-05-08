@@ -1,6 +1,7 @@
 
 import sys, re, time
 import requests
+import urlparse
 
 from xml.dom.minidom import parseString as xmlParseString
 from fixtags import FixTagsHtmlParser
@@ -386,17 +387,23 @@ class FimFictionEPubGenerator(ePubGenerator):
 
         if resp.status_code == 200:
             indata = resp.text.encode(resp.encoding)
-            bfhp = BodyFileHtmlParser()
+            bfhp = BodyFileHtmlParser(body_url)
             bfhp.set_chapter_cb(self.add_fim_chapter)
-            bfhp.set_image_cb(self.add_image)
+            bfhp.set_image_cb(self.add_inline_image)
             bfhp.feed(indata)
 
 
     def add_cover_image(self):
         if 'image' in self.metas:
-            img_url = self.metas['image']
+            base_url = self.metas['url']
+            img_url = urlparse.urljoin(base_url, self.metas['image'])
             filename = self.add_image(img_url, tagname='coverimage')
             self.set_meta('coverimg', filename)
+
+
+    def add_inline_image(self, url):
+        url = urlparse.urljoin(self.metas['url'], url)
+        return self.add_image(url)
 
 
     def handle_url(self, url):

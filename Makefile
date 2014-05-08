@@ -29,8 +29,15 @@ run-prod: $(ENVDIR) $(EGGS)
 	bash -c "$(ACTIVATE) ; CLAY_CONFIG=$(PROD_CLAY_CONFIG) clay-devserver"
 
 
-distclean:
-	rm -rf env $(EGGS)
-	find . -name '*.pyc' -exec rm {} \;
+test:
+	nosetests naps/tests
+
+
+clean:
+	find naps -name '*.pyc' -exec rm {} \;
+
+
+distclean: clean
+	rm -rf env *.egg-info
 
 
