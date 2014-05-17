@@ -306,7 +306,10 @@ class FimFictionEPubGenerator(ePubGenerator):
 
         resp = None
         for retry in range(3):
-            resp = requests.get(desc_url)
+            try:
+                resp = requests.get(desc_url)
+            except requests.exceptions.RequestException, e:
+                break
             if resp.status_code == 200:
                 break
             if resp.status_code == 404:
@@ -375,7 +378,10 @@ class FimFictionEPubGenerator(ePubGenerator):
 
         resp = None
         for retry in range(3):
-            resp = requests.get(body_url)
+            try:
+                resp = requests.get(body_url)
+            except requests.exceptions.RequestException, e:
+                break
             if resp.status_code == 200:
                 break
             if resp.status_code == 404:

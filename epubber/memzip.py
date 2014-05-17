@@ -29,7 +29,10 @@ class MemZip():
     def add_file_from_url(self, targfile, url):
         resp = None
         for retry in range(3):
-            resp = requests.get(url, stream=True)
+            try:
+                resp = requests.get(url, stream=True)
+            except requests.exceptions.RequestException, e:
+                break
             if resp.status_code == 200:
                 break
             if resp.status_code == 404:
