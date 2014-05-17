@@ -393,7 +393,7 @@ class FimFictionEPubGenerator(ePubGenerator):
 
         if resp.status_code == 200:
             indata = resp.text.encode(resp.encoding)
-            bfhp = BodyFileHtmlParser(body_url)
+            bfhp = BodyFileHtmlParser()
             bfhp.set_chapter_cb(self.add_fim_chapter)
             bfhp.set_image_cb(self.add_inline_image)
             bfhp.feed(indata)
