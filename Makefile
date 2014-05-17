@@ -30,11 +30,11 @@ run-prod: $(ENVDIR) $(EGGS)
 
 
 test:
-	nosetests naps/tests
+	nosetests $(PYMODULE)/tests
 
 
 clean:
-	find naps -name '*.pyc' -exec rm {} \;
+	find $(PYMODULE) -name '*.pyc' -exec rm {} \;
 
 
 distclean: clean
