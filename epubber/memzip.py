@@ -16,7 +16,11 @@ class MemZip():
 
     def __init__(self):
         self.memOut = BytesIO()
-        self.zipFile = zipfile.ZipFile(self.memOut, 'w') 
+        self.zipFile = zipfile.ZipFile(
+            self.memOut, 'w',
+            compression=zipfile.ZIP_DEFLATED,
+            allowZip64=False
+        ) 
 
     def add_file(self, targfile, filename):
         self.zipFile.write(targfile, filename)
@@ -56,4 +60,6 @@ class MemZip():
         return self.memOut.getvalue()
 
 
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4 nowrap
 

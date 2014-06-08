@@ -22,6 +22,7 @@ class ePubGenerator():
     chapter_num = 0
     image_num = 0
     metas = {}
+    image_urls = {}
 
     def __init__(self):
         self.mem_zip = MemZip()
@@ -53,6 +54,8 @@ class ePubGenerator():
 
 
     def add_image(self, url, tagname=None):
+        if url in self.image_urls:
+            return self.image_urls[url]
         img_ext = '.jpeg'
         img_mime = 'image/jpeg'
         if '.gif' in url:
@@ -66,6 +69,7 @@ class ePubGenerator():
             tagname = 'image%d' % self.image_num
         imgfile = tagname + img_ext
         self.add_file(imgfile, tagname=tagname, mimetype=img_mime, url=url)
+        self.image_urls[url] = imgfile
         return imgfile
 
 
@@ -172,4 +176,5 @@ class ePubGenerator():
 
 
 
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4 nowrap
 
