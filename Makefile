@@ -26,7 +26,7 @@ run-devel: $(ENVDIR) $(EGGS)
 
 
 run-prod: $(ENVDIR) $(EGGS)
-	bash -c "$(ACTIVATE) ; CLAY_CONFIG=$(PROD_CLAY_CONFIG) clay-devserver"
+	nohup bash -c "$(ACTIVATE) ; CLAY_CONFIG=$(PROD_CLAY_CONFIG) clay-devserver" &
 
 
 test:
