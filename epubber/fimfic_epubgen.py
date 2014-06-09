@@ -1,7 +1,8 @@
 
-import sys, re, time
+import sys, re, time, cgi
 import requests
 import urlparse
+import textwrap
 
 from xml.dom.minidom import parseString as xmlParseString
 from fixtags import FixTagsHtmlParser
@@ -158,54 +159,218 @@ class FimFictionEPubGenerator(ePubGenerator):
 
 
     def add_css_file(self):
-        outdata = ''
-        outdata += 'body {\n'
-        outdata += '  margin-left: .5em;\n'
-        outdata += '  margin-right: .5em;\n'
-        outdata += '  text-align: justify;\n'
-        outdata += '}\n'
-        outdata += '\n'
-        outdata += 'p {\n'
-        outdata += '  font-family: serif;\n'
-        outdata += '  font-size: 10pt;\n'
-        outdata += '  text-align: justify;\n'
-        outdata += '  margin-top: 0px;\n'
-        outdata += '  margin-bottom: 1ex;\n'
-        outdata += '}\n'
-        outdata += '\n'
-        outdata += 'h1, h2, h3 {\n'
-        outdata += '  font-family: sans-serif;\n'
-        outdata += '  font-style: italic;\n'
-        outdata += '  text-align: center;\n'
-        outdata += '}\n'
-        outdata += '\n'
-        outdata += 'h1, h2 {\n'
-        outdata += '  background-color: #6b879c;\n'
-        outdata += '  color: white;\n'
-        outdata += '  width: 100%;\n'
-        outdata += '}\n'
-        outdata += '\n'
-        outdata += 'h1 {\n'
-        outdata += '  margin-bottom: 2px;\n'
-        outdata += '}\n'
-        outdata += '\n'
-        outdata += 'h2 {\n'
-        outdata += '  margin-top: -2px;\n'
-        outdata += '  margin-bottom: 2px;\n'
-        outdata += '}\n'
-        outdata += '\n'
-        outdata += 'p.double {\n'
-        outdata += '  margin-top:1.0em;\n'
-        outdata += '}\n'
-        outdata += '\n'
-        outdata += 'p.indented {\n'
-        outdata += '  text-indent:3.0em;\n'
-        outdata += '}\n'
-        outdata += '\n'
-        outdata += 'img {\n'
-        outdata += '  max-width: 100%;\n'
-        outdata += '  max-height: 100%;\n'
-        outdata += '}\n'
+        outdata = textwrap.dedent("""\
+            body {
+              margin-left: .5em;
+              margin-right: .5em;
+              text-align: justify;
+            }
+            
+            p {
+              font-family: serif;
+              font-size: 10pt;
+              text-align: justify;
+              margin-top: 0px;
+              margin-bottom: 1ex;
+            }
+            
+            h1, h2, h3 {
+              font-family: sans-serif;
+              font-style: italic;
+              text-align: center;
+            }
+            
+            h1, h2 {
+              background-color: #6b879c;
+              color: white;
+              width: 100%;
+            }
+            
+            h1 {
+              margin-bottom: 2px;
+            }
+            
+            h2 {
+              margin-top: -2px;
+              margin-bottom: 2px;
+            }
+            
+            p.double {
+              margin-top:1.0em;
+            }
+            
+            p.indented {
+              text-indent:3.0em;
+            }
+            
+            img {
+              max-width: 100%;
+              max-height: 100%;
+            }
+
+            .story_category, .story_category_small {
+                display: inline-block;
+                padding: 8px;
+                line-height: 1.0em;
+                padding-left: 12px;
+                padding-right: 12px;
+                color: #555;
+                font-family: Calibri, Arial;
+                text-decoration: none;
+                background-color: #eee;
+                border: 1px solid rgba(0, 0, 0, 0.2)
+            }
+
+            .story_category_small {
+                padding: 4px;
+                border-radius: 4px;
+                font-size: 0.7em
+            }
+
+            .story_category_romance {
+                border-color: #5f308f !important;
+                background-color: #773db3 !important;
+                color: #FFF;
+                text-shadow: -1px -1px #5f308f;
+                background: #763cb2;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #7c40bb), color-stop(100%, #7139aa));
+                background: -webkit-linear-gradient(top, #7c40bb 0%, #7139aa 100%);
+                background: linear-gradient(to bottom, #7c40bb 0%, #7139aa 100%);
+                box-shadow: 0px 1px 0px #9a4fe8 inset
+            }
+
+            .story_category_dark {
+                border-color: #791c1c !important;
+                background-color: #982323 !important;
+                color: #FFF;
+                text-shadow: -1px -1px #791c1c;
+                background: #972222;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #9f2424), color-stop(100%, #902121));
+                background: -webkit-linear-gradient(top, #9f2424 0%, #902121 100%);
+                background: linear-gradient(to bottom, #9f2424 0%, #902121 100%);
+                box-shadow: 0px 1px 0px #c52d2d inset
+            }
+
+            .story_category_sad {
+                border-color: #ad4b6c !important;
+                background-color: #d95e87 !important;
+                color: #FFF;
+                text-shadow: -1px -1px #ad4b6c;
+                background: #d85d86;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #e3628d), color-stop(100%, #ce5980));
+                background: -webkit-linear-gradient(top, #e3628d 0%, #ce5980 100%);
+                background: linear-gradient(to bottom, #e3628d 0%, #ce5980 100%);
+                box-shadow: 0px 1px 0px #ff7aaf inset
+            }
+
+            .story_category_tragedy {
+                border-color: #b37d22 !important;
+                background-color: #e09d2b !important;
+                color: #FFF;
+                text-shadow: -1px -1px #b37d22;
+                background: #df9c2a;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #eba42d), color-stop(100%, #d49528));
+                background: -webkit-linear-gradient(top, #eba42d 0%, #d49528 100%);
+                background: linear-gradient(to bottom, #eba42d 0%, #d49528 100%);
+                box-shadow: 0px 1px 0px #ffcc37 inset
+            }
+
+            .story_category_comedy {
+                border-color: #a18400 !important;
+                background-color: #caa600 !important;
+                color: #FFF;
+                text-shadow: -1px -1px #a18400;
+                background: #c9a500;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #d4ae00), color-stop(100%, #bf9d00));
+                background: -webkit-linear-gradient(top, #d4ae00 0%, #bf9d00 100%);
+                background: linear-gradient(to bottom, #d4ae00 0%, #bf9d00 100%);
+                box-shadow: 0px 1px 0px gold inset
+            }
+
+            .story_category_random {
+                border-color: #325ca4 !important;
+                background-color: #3f74ce !important;
+                color: #FFF;
+                text-shadow: -1px -1px #325ca4;
+                background: #3e73cd;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #4279d8), color-stop(100%, #3b6ec3));
+                background: -webkit-linear-gradient(top, #4279d8 0%, #3b6ec3 100%);
+                background: linear-gradient(to bottom, #4279d8 0%, #3b6ec3 100%);
+                box-shadow: 0px 1px 0px #5196ff inset
+            }
+
+            .story_category_slice_of_life {
+                border-color: #323aa5 !important;
+                background-color: #3f49cf !important;
+                color: #FFF;
+                text-shadow: -1px -1px #323aa5;
+                background: #3e48ce;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #424cd9), color-stop(100%, #3b45c4));
+                background: -webkit-linear-gradient(top, #424cd9 0%, #3b45c4 100%);
+                background: linear-gradient(to bottom, #424cd9 0%, #3b45c4 100%);
+                box-shadow: 0px 1px 0px #515eff inset
+            }
+
+            .story_category_adventure {
+                border-color: #37a040 !important;
+                background-color: #45c950 !important;
+                color: #FFF;
+                text-shadow: -1px -1px #37a040;
+                background: #44c850;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #48d354), color-stop(100%, #41be4c));
+                background: -webkit-linear-gradient(top, #48d354 0%, #41be4c 100%);
+                background: linear-gradient(to bottom, #48d354 0%, #41be4c 100%);
+                box-shadow: 0px 1px 0px #59ff68 inset
+            }
+
+            .story_category_alternate_universe {
+                border-color: #6c6c6c !important;
+                background-color: #888 !important;
+                color: #FFF;
+                text-shadow: -1px -1px #6c6c6c;
+                background: #878787;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #8e8e8e), color-stop(100%, #818181));
+                background: -webkit-linear-gradient(top, #8e8e8e 0%, #818181 100%);
+                background: linear-gradient(to bottom, #8e8e8e 0%, #818181 100%);
+                box-shadow: 0px 1px 0px #b0b0b0 inset
+            }
+
+            .story_category_crossover {
+                border-color: #389380 !important;
+                background-color: #47b8a0 !important;
+                color: #FFF;
+                text-shadow: -1px -1px #389380;
+                background: #46b7a0;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #4ac1a8), color-stop(100%, #43ae98));
+                background: -webkit-linear-gradient(top, #4ac1a8 0%, #43ae98 100%);
+                background: linear-gradient(to bottom, #4ac1a8 0%, #43ae98 100%);
+                box-shadow: 0px 1px 0px #5cefd0 inset
+            }
+
+            .story_category_human {
+                border-color: #906848 !important;
+                background-color: #b5835a !important;
+                color: #FFF;
+                text-shadow: -1px -1px #906848;
+                background: #b48259;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #be895e), color-stop(100%, #ab7c55));
+                background: -webkit-linear-gradient(top, #be895e 0%, #ab7c55 100%);
+                background: linear-gradient(to bottom, #be895e 0%, #ab7c55 100%);
+                box-shadow: 0px 1px 0px #ebaa75 inset
+            }
+
+            .story_category_anthro {
+                border-color: #905448 !important;
+                background-color: #b5695a !important;
+                color: #FFF;
+                text-shadow: -1px -1px #905448;
+                background: #b46859;
+                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #be6e5e), color-stop(100%, #ab6355));
+                background: -webkit-linear-gradient(top, #be6e5e 0%, #ab6355 100%);
+                background: linear-gradient(to bottom, #be6e5e 0%, #ab6355 100%);
+                box-shadow: 0px 1px 0px #eb8875 inset
+            }
+        """)
         css_file = self.metas['cssfile']
         outdata = bytes(outdata)
         self.add_file(css_file, tagname='css_css1', mimetype='text/css', data=outdata)
@@ -229,8 +394,8 @@ class FimFictionEPubGenerator(ePubGenerator):
         outdata += '\t</head>\n'
         outdata += '\t<body>\n'
         outdata += '\t\t<div>\n'
-        outdata += '\t\t\t<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%%" height="100%%" viewBox="0 0 474 751" preserveAspectRatio="xMinyMin">\n'
-        outdata += '\t\t\t\t<image width="474" height="751" xlink:href="%(coverimg)s" />\n'
+        outdata += '\t\t\t<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%%" height="100%%" viewBox="0 0 800 1200" preserveAspectRatio="xMinyMin">\n'
+        outdata += '\t\t\t\t<image width="800" height="1200" xlink:href="%(coverimg)s" />\n'
         outdata += '\t\t\t</svg>\n'
         outdata += '\t\t</div>\n'
         outdata += '\t</body>\n'
@@ -300,8 +465,8 @@ class FimFictionEPubGenerator(ePubGenerator):
         url_pat = r'<link rel="canonical" href="([^"]*)"'
         metapat = r'<meta property="og:([a-z]*)" content="([^"]*)"'
         authpat = r'<span class="author"><a href="/user/[^>]*>([^<]*)<'
-        catapat = r'class="story_category.*?>(.*?)</a>'
-        charpat = r'class="character_icon.*? title="(.*?)"'
+        catapat = r'class="story_category (.*?)".*?>(.*?)</a>'
+        charpat = r'class="character_icon" title="(.*?)"'
         descpat = r'class="description".*?<hr.*?>(.*?)</div>'
 
         resp = None
@@ -319,32 +484,44 @@ class FimFictionEPubGenerator(ePubGenerator):
         if resp is None:
             return None
 
+        fixtags = FixTagsHtmlParser()
+        fixtags.strip_js = True
+
         categories = []
         characters = []
         data = {}
         if resp.status_code == 200:
             for m in re.finditer(metapat, resp.text, re.I):
                 data[m.group(1)] = m.group(2).strip()
-            for m in re.finditer(url_pat, resp.text, re.I):
+            for m in re.finditer(url_pat, resp.text, re.I|re.DOTALL):
                 data['url'] = m.group(1).strip()
                 break
-            for m in re.finditer(authpat, resp.text, re.I):
+            for m in re.finditer(authpat, resp.text, re.I|re.DOTALL):
                 data['author'] = m.group(1).strip()
                 break
-            for m in re.finditer(descpat, resp.text, re.I):
-                data['description'] = m.group(1).strip()
+            for m in re.finditer(descpat, resp.text, re.I|re.DOTALL):
+                descr = m.group(1).strip()
+                descr = fixtags.fixup_string(descr)
+                data['description'] = descr
                 break
-            for m in re.finditer(catapat, resp.text, re.I):
-                categories.append(m.group(1).strip())
-            for m in re.finditer(charpat, resp.text, re.I):
+            for m in re.finditer(catapat, resp.text, re.I|re.DOTALL):
+                categories.append('<span class="story_category %s">%s</span>' % (m.group(1), m.group(2).strip()))
+            for m in re.finditer(charpat, resp.text, re.I|re.DOTALL):
                 characters.append(m.group(1).strip())
+            if 'image' in data:
+                bigimgurl = data['image'].replace('_r.jpg', '.jpg')
+                if bigimgurl != data['image']:
+                    data['image'] = bigimgurl
 
-        data['categories'] = ', '.join(categories)
+        data['categories'] = ' '.join(categories)
         data['characters'] = ', '.join(characters)
 
         # Jump through XML hoops to unparse entities.
-        xml_parts = ['<item name="%s">%s</item>' % (key, val) for key,val in data.iteritems()]
+        xml_parts = ['<item name="%s">%s</item>' % (key, cgi.escape(val)) for key,val in data.iteritems()]
         xml_str = '<items>' + (''.join(xml_parts)) + '</items>'
+
+        xml_str = fixtags.fixup_string(xml_str)
+
         doc = xmlParseString(xml_str)
         els = doc.getElementsByTagName('item')
         out_data = {}
