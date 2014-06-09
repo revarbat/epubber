@@ -181,8 +181,6 @@ class FimFictionEPubGenerator(ePubGenerator):
             }
             
             h1, h2 {
-              background-color: #6b879c;
-              color: white;
               width: 100%;
             }
             
@@ -394,9 +392,11 @@ class FimFictionEPubGenerator(ePubGenerator):
         outdata += '\t</head>\n'
         outdata += '\t<body>\n'
         outdata += '\t\t<div>\n'
-        outdata += '\t\t\t<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%%" height="100%%" viewBox="0 0 800 1200" preserveAspectRatio="xMinyMin">\n'
-        outdata += '\t\t\t\t<image width="800" height="1200" xlink:href="%(coverimg)s" />\n'
-        outdata += '\t\t\t</svg>\n'
+        outdata += '\t\t\t<a href="%(image)s">\n'
+        outdata += '\t\t\t\t<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%%" height="100%%" viewBox="0 0 800 1200" preserveAspectRatio="xMinyMin">\n'
+        outdata += '\t\t\t\t\t<image width="800" height="1200" xlink:href="%(coverimg)s" />\n'
+        outdata += '\t\t\t\t</svg>\n'
+        outdata += '\t\t\t</a>\n'
         outdata += '\t\t</div>\n'
         outdata += '\t</body>\n'
         outdata += '</html>\n'
@@ -420,11 +420,11 @@ class FimFictionEPubGenerator(ePubGenerator):
         outdata += '\t\t</style>\n'
         outdata += '\t</head>\n'
         outdata += '\t<body>\n'
-        outdata += '\t\t<h1>%(title)s</h1>\n'
+        outdata += '\t\t<h1><a href="%(url)s">%(title)s</a></h1>\n'
         outdata += '\t\t<h2>by %(author)s</h2>\n'
-        outdata += '\t\t<div class="block">Description: <blockquote>%(description)s</blockquote></div>\n'
-        outdata += '\t\t<div class="block">Categories: <blockquote>%(categories)s</blockquote></div>\n'
-        outdata += '\t\t<div class="block">Characters: <blockquote>%(characters)s</blockquote></div>\n'
+        outdata += '\t\t<div class="block">%(categories)s</div>\n'
+        outdata += '\t\t<div class="block">%(description)s</div>\n'
+        outdata += '\t\t<div class="block">Dramatis Personae: %(characters)s</div>\n'
         outdata += '\t</body>\n'
         outdata += '</html>\n'
         outdata = outdata % self.metas
