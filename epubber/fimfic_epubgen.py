@@ -190,7 +190,7 @@ class FimFictionEPubGenerator(ePubGenerator):
             
             h2 {
               margin-top: -2px;
-              margin-bottom: 2px;
+              margin-bottom: 20px;
             }
             
             p.double {
@@ -422,10 +422,11 @@ class FimFictionEPubGenerator(ePubGenerator):
         outdata += '\t<body>\n'
         outdata += '\t\t<h1><a href="%(url)s">%(title)s</a></h1>\n'
         outdata += '\t\t<h2>by %(author)s</h2>\n'
-        outdata += '\t\t<hr/>\n'
-        outdata += '\t\t<div class="block">%(categories)s </div>\n'
-        outdata += '\t\t<div class="block">%(description)s </div>\n'
-        outdata += '\t\t<div class="block">Dramatis Personae: %(characters)s </div>\n'
+        outdata += '\t\t<hr />\n'
+        outdata += '\t\t<p class="double">%(categories)s </p>\n'
+        outdata += '\t\t%(description)s\n'
+        outdata += '\t\t<hr />\n'
+        outdata += '\t\t<p class="double">Dramatis Personae: %(characters)s </p>\n'
         outdata += '\t</body>\n'
         outdata += '</html>\n'
         outdata = outdata % self.metas
@@ -501,7 +502,7 @@ class FimFictionEPubGenerator(ePubGenerator):
                 data['author'] = m.group(1).strip()
                 break
             for m in re.finditer(descpat, resp.text, re.I|re.DOTALL):
-                descr = u'<p>'+m.group(1).strip()
+                descr = u'<p class="double">'+m.group(1).strip()
                 descr = fixtags.fixup_string(descr)
                 data['description'] = descr
                 break
