@@ -423,10 +423,16 @@ class FimFictionEPubGenerator(ePubGenerator):
         outdata += '\t\t<h1><a href="%(url)s">%(title)s</a></h1>\n'
         outdata += '\t\t<h2>by %(author)s</h2>\n'
         outdata += '\t\t<hr />\n'
-        outdata += '\t\t<p class="double">%(categories)s </p>\n'
+
+        if self.metas['categories']:
+            outdata += '\t\t<p class="double">%(categories)s </p>\n'
+
         outdata += '\t\t%(description)s\n'
         outdata += '\t\t<hr />\n'
-        outdata += '\t\t<p class="double">Dramatis Personae: %(characters)s </p>\n'
+
+        if self.metas['characters']:
+            outdata += '\t\t<p class="double">Dramatis Personae: %(characters)s </p>\n'
+
         outdata += '\t</body>\n'
         outdata += '</html>\n'
         outdata = outdata % self.metas
@@ -504,7 +510,9 @@ class FimFictionEPubGenerator(ePubGenerator):
             for m in re.finditer(descpat, resp.text, re.I|re.DOTALL):
                 descr = u'<p class="double">'+m.group(1).strip()
                 descr = fixtags.fixup_string(descr)
-                data['description'] = descr
+                descr = descr.strip()
+                if descr:
+                    data['description'] = descr
                 break
             for m in re.finditer(catapat, resp.text, re.I|re.DOTALL):
                 categories.append('<span class="story_category %s">%s</span>' % (m.group(1), m.group(2).strip()))
