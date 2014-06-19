@@ -594,8 +594,8 @@ class FimFictionEPubGenerator(ePubGenerator):
     def handle_url(self, url):
         # If url is a fimfiction URL, get the story number.
         pats = [
-            (r'^(http://)?(www[.])?fimfiction[.]net/story/([0-9][0-9]*)(/.*)?$', r'\3'),
-            (r'^(http://)?(www[.])?fimfiction[.]net/download_(story|epub).php\?story=([0-9][0-9]*)(&.*)?$', r'\4')
+            (r'^(https?://)?(www[.])?fimfiction[.]net/story/([0-9][0-9]*)(/.*)?$', r'\3'),
+            (r'^(https?://)?(www[.])?fimfiction[.]net/download_(story|epub).php\?story=([0-9][0-9]*)(&.*)?$', r'\4')
         ]
         for pat,pos in pats:
             if re.match(pat, url):

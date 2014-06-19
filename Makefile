@@ -1,6 +1,8 @@
 DEV_CLAY_CONFIG=config/development.yaml
 PROD_CLAY_CONFIG=config/production.yaml
 PYMODULE=epubber
+BINDTO=belfry.com:8001
+VIEWS=$(PYMODULE).views.main:app
 
 EGGS=$(PYMODULE).egg-info
 ENVDIR=env
@@ -26,7 +28,7 @@ run-devel: $(ENVDIR) $(EGGS)
 
 
 run-prod: $(ENVDIR) $(EGGS)
-	nohup bash -c "$(ACTIVATE) ; CLAY_CONFIG=$(PROD_CLAY_CONFIG) clay-devserver" &
+	bash -c "$(ACTIVATE) ; CLAY_CONFIG=$(PROD_CLAY_CONFIG) gunicorn -w 4 -b $(BINDTO) $(VIEWS)"
 
 
 test:
