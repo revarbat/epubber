@@ -499,51 +499,40 @@ class FimFictionEPubGenerator(ePubGenerator):
         characters = []
         data = {}
         if resp.status_code == 200:
-            for m in re.finditer(metapat, resp.text, re.I):
+            indata = resp.text.encode(resp.encoding)
+            for m in re.finditer(metapat, indata, re.I):
                 data[m.group(1)] = m.group(2).strip()
-            for m in re.finditer(url_pat, resp.text, re.I|re.DOTALL):
+            for m in re.finditer(url_pat, indata, re.I|re.DOTALL):
                 data['url'] = m.group(1).strip()
                 break
-            for m in re.finditer(authpat, resp.text, re.I|re.DOTALL):
+            for m in re.finditer(authpat, indata, re.I|re.DOTALL):
                 data['author'] = m.group(1).strip()
                 break
-            for m in re.finditer(descpat, resp.text, re.I|re.DOTALL):
+            for m in re.finditer(descpat, indata, re.I|re.DOTALL):
                 descr = u'<p class="double">'+m.group(1).strip()
                 descr = fixtags.fixup_string(descr)
                 descr = descr.strip()
                 if descr:
                     data['description'] = descr
                 break
-            for m in re.finditer(catapat, resp.text, re.I|re.DOTALL):
+            for m in re.finditer(catapat, indata, re.I|re.DOTALL):
                 categories.append('<span class="story_category %s">%s</span>' % (m.group(1), m.group(2).strip()))
-            for m in re.finditer(charpat, resp.text, re.I|re.DOTALL):
+            for m in re.finditer(charpat, indata, re.I|re.DOTALL):
                 characters.append(m.group(1).strip())
             if 'image' in data:
                 bigimgurl = data['image'].replace('_r.jpg', '.jpg')
+                bigimgurl = bigimgurl.replace('_r.png', '.png')
+                bigimgurl = bigimgurl.replace('_r.gif', '.gif')
                 if bigimgurl != data['image']:
                     data['image'] = bigimgurl
 
         data['categories'] = ' '.join(categories)
         data['characters'] = ', '.join(characters)
 
-        # Jump through XML hoops to unparse entities.
-        xml_parts = ['<item name="%s">%s</item>' % (key, cgi.escape(val)) for key,val in data.iteritems()]
-        xml_str = '<items>' + (''.join(xml_parts)) + '</items>'
-
-        xml_str = fixtags.fixup_string(xml_str)
-
-        doc = xmlParseString(xml_str)
-        els = doc.getElementsByTagName('item')
-        out_data = {}
-        for el in els:
-            key = el.attributes['name'].value
-            val = self._getValue(el)
-            out_data[key] = val
-
         tzed = time.strftime("%z")
         created_at = time.strftime("%Y-%m-%dT%H:%M:%S") + tzed[:3] + ':' + tzed[3:]
 
-        for key,val in out_data.iteritems():
+        for key,val in data.iteritems():
             self.set_meta(key, val)
 
         short_name = re.sub(r'[^a-zA-Z0-9_-]', '', self.metas['title'])
