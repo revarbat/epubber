@@ -1,4 +1,5 @@
 import os, sys
+import unicodedata
 
 from StringIO import StringIO
 from HTMLParser import HTMLParser
@@ -180,6 +181,8 @@ class FixTagsHtmlParser(HTMLParser):
                     poptag,popbody = self.popped_tags.pop()
                     self.tag_stack.append( (poptag, popbody) )
                     self.out_f.write("<%s%s>" % (poptag, popbody))
+            #data = re.sub(r'[\x00-\x08\x0b-\x0c\x0e-\x1f]', r'', data)
+            data = ''.join(ch for ch in unicode(data) if unicodedata.category(ch)[0]!="C" or ch=='\n' or ch=='\t' or ch=='\r')
             self.out_f.write(data)
 
 
@@ -199,7 +202,8 @@ class FixTagsHtmlParser(HTMLParser):
         else:
             chnum = name2codepoint[name]
             if not self.skip_tag:
-                self.out_f.write("&#%d;" % chnum)
+                if chnum >= 32:
+                    self.out_f.write("&#%d;" % chnum)
 
 
     def handle_charref(self, name):
@@ -212,7 +216,8 @@ class FixTagsHtmlParser(HTMLParser):
         else:
             chnum = int(name)
         if not self.skip_tag:
-            self.out_f.write("&#%d;" % chnum)
+            if chnum >= 32:
+                self.out_f.write("&#%d;" % chnum)
 
 
     def handle_decl(self, data):
