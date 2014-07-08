@@ -392,11 +392,13 @@ class FimFictionEPubGenerator(ePubGenerator):
         outdata += '\t</head>\n'
         outdata += '\t<body>\n'
         outdata += '\t\t<div>\n'
-        outdata += '\t\t\t<a href="%(image)s">\n'
+        if 'cover_link' in self.metas:
+            outdata += '\t\t\t<a href="%(cover_link)s">\n'
         outdata += '\t\t\t\t<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100%%" height="100%%" viewBox="0 0 800 1200" preserveAspectRatio="xMinyMin">\n'
         outdata += '\t\t\t\t\t<image width="800" height="1200" xlink:href="%(coverimg)s" />\n'
         outdata += '\t\t\t\t</svg>\n'
-        outdata += '\t\t\t</a>\n'
+        if 'cover_link' in self.metas:
+            outdata += '\t\t\t</a>\n'
         outdata += '\t\t</div>\n'
         outdata += '\t</body>\n'
         outdata += '</html>\n'
@@ -470,17 +472,19 @@ class FimFictionEPubGenerator(ePubGenerator):
 
     def get_metas_from_fimfiction(self):
         desc_url = '%s/story/%s' % (self.site_url, self.story_num)
-        url_pat = r'<link rel="canonical" href="([^"]*)"'
-        metapat = r'<meta property="og:([a-z]*)" content="([^"]*)"'
-        authpat = r'<span class="author"><a href="/user/[^>]*>([^<]*)<'
+        url_pat = r'<link rel="canonical" href="(.*?)"'
+        metapat = r'<meta property="og:([a-z]*)" content="(.*?)"'
+        authpat = r'<span class="author"><a href="/user/.*?>(.*?)<'
         catapat = r'class="story_category (.*?)".*?>(.*?)</a>'
         charpat = r'class="character_icon" title="(.*?)"'
         descpat = r'class="description".*?<hr.*?>(.*?)</div>'
+        imglpat = r'<div class="story_image">\s*<a .*?href="(.*?)"'
 
         resp = None
+        cookies = dict(view_mature='true')
         for retry in range(3):
             try:
-                resp = requests.get(desc_url)
+                resp = requests.get(desc_url,cookies=cookies)
             except requests.exceptions.RequestException, e:
                 break
             if resp.status_code == 200:
@@ -499,32 +503,44 @@ class FimFictionEPubGenerator(ePubGenerator):
         characters = []
         data = {}
         if resp.status_code == 200:
+            # Ensure we use the right encoding.
             indata = resp.text.encode(resp.encoding)
+
+            # Get some story metadata from header.
             for m in re.finditer(metapat, indata, re.I):
                 data[m.group(1)] = m.group(2).strip()
-            for m in re.finditer(url_pat, indata, re.I|re.DOTALL):
-                data['url'] = m.group(1).strip()
-                break
-            for m in re.finditer(authpat, indata, re.I|re.DOTALL):
-                data['author'] = m.group(1).strip()
-                break
-            for m in re.finditer(descpat, indata, re.I|re.DOTALL):
-                descr = u'<p class="double">'+m.group(1).strip()
-                descr = fixtags.fixup_string(descr)
-                descr = descr.strip()
-                if descr:
-                    data['description'] = descr
-                break
+
+            # Get the story categories.
             for m in re.finditer(catapat, indata, re.I|re.DOTALL):
                 categories.append('<span class="story_category %s">%s</span>' % (m.group(1), m.group(2).strip()))
+
+            # Get the characters listed for the story.
             for m in re.finditer(charpat, indata, re.I|re.DOTALL):
                 characters.append(m.group(1).strip())
-            if 'image' in data:
-                bigimgurl = data['image'].replace('_r.jpg', '.jpg')
-                bigimgurl = bigimgurl.replace('_r.png', '.png')
-                bigimgurl = bigimgurl.replace('_r.gif', '.gif')
-                if bigimgurl != data['image']:
-                    data['image'] = bigimgurl
+
+            # Get the official story URL.
+            m = re.search(url_pat, indata, re.I|re.DOTALL)
+            if m:
+                data['url'] = m.group(1).strip()
+
+            # Get the story author
+            m = re.search(authpat, indata, re.I|re.DOTALL)
+            if m:
+                data['author'] = m.group(1).strip()
+
+            # Get the long version of the story description.
+            m = re.search(descpat, indata, re.I|re.DOTALL)
+            if m:
+                descr = u'<p class="double">'+m.group(1).strip()
+                descr = fixtags.fixup_string(descr).strip()
+                if descr:
+                    data['description'] = descr
+
+            # Get the long version of the story description.
+            m = re.search(imglpat, indata, re.I|re.DOTALL)
+            if m:
+                link_url = urlparse.urljoin(desc_url, m.group(1).strip())
+                data['cover_link'] = link_url
 
         data['categories'] = ' '.join(categories)
         data['characters'] = ', '.join(characters)
@@ -535,7 +551,8 @@ class FimFictionEPubGenerator(ePubGenerator):
         for key,val in data.iteritems():
             self.set_meta(key, val)
 
-        short_name = re.sub(r'[^a-zA-Z0-9_-]', '', self.metas['title'])
+        short_name = re.sub(r'&[^;]*;', '', self.metas['title'])
+        short_name = re.sub(r'[^a-zA-Z0-9_-]', '', short_name)
         epub_file = "%s.epub" % short_name
 
         self.set_meta('url', desc_url)
@@ -553,9 +570,10 @@ class FimFictionEPubGenerator(ePubGenerator):
         img_re = re.compile(r'<img ([^>]*)src="([^"]*)"', re.I)
 
         resp = None
+        cookies = dict(view_mature='true')
         for retry in range(3):
             try:
-                resp = requests.get(body_url)
+                resp = requests.get(body_url, cookies=cookies)
             except requests.exceptions.RequestException, e:
                 break
             if resp.status_code == 200:
