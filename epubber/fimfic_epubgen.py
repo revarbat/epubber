@@ -523,20 +523,20 @@ class FimFictionEPubGenerator(ePubGenerator):
             if m:
                 data['url'] = m.group(1).strip()
 
-            # Get the story author
+            # Get the story author.
             m = re.search(authpat, indata, re.I|re.DOTALL)
             if m:
                 data['author'] = m.group(1).strip()
 
-            # Get the long version of the story description.
+            # Get the long version of the story description, if possible.
             m = re.search(descpat, indata, re.I|re.DOTALL)
             if m:
                 descr = u'<p class="double">'+m.group(1).strip()
                 descr = fixtags.fixup_string(descr).strip()
                 if descr:
-                    data['description'] = descr
+                    data['long_descr'] = descr
 
-            # Get the long version of the story description.
+            # Get the hyperlink for the cover art, if any.
             m = re.search(imglpat, indata, re.I|re.DOTALL)
             if m:
                 link_url = urlparse.urljoin(desc_url, m.group(1).strip())
