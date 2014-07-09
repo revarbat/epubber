@@ -15,8 +15,8 @@ all: $(ENVDIR) $(EGGS)
 
 env:
 	mkdir $(ENVDIR)
-	virtualenv $(ENVDIR)
-	bash -c "$(ACTIVATE) ; CFLAGS=-Qunused-arguments CPPFLAGS=-Qunused-arguments pip install -r requirements.txt"
+	virtualenv-2.7 $(ENVDIR)
+	bash -c "$(ACTIVATE) ; pip2.7 install -r requirements.txt"
 
 
 $(EGGS):
