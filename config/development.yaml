@@ -13,4 +13,42 @@ flask:
   sessions_path: sessions
   sessions_timeout: 3600
 views: [epubber.views.main]
+logging:
+  version: 1
+  formatters:
+    default:
+      format: '%(asctime)s.%(msecs).03d: %(message)s'
+      datefmt: '%Y-%m-%d %H:%M:%S'
+    consolefmt:
+      format: '%(asctime)s.%(msecs).03d %(name)s: %(message)s'
+      datefmt: '%Y-%m-%d %H:%M:%S'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: DEBUG
+      formatter: consolefmt
+      stream: ext://sys.stdout
+    accesslog:
+      class: logging.handlers.RotatingFileHandler
+      level: DEBUG
+      formatter: default
+      filename: epubber_access.log
+      maxBytes: 10485760
+      backupCount: 3
+    errorlog:
+      class: logging.handlers.RotatingFileHandler
+      level: DEBUG
+      formatter: default
+      filename: epubber_errors.log
+      maxBytes: 10485760
+      backupCount: 3
+  loggers:
+    epubber_access:
+      level: DEBUG
+      propagate: 0
+      handlers: [console, accesslog]
+    epubber_error:
+      level: DEBUG
+      propagate: 0
+      handlers: [console, errorlog]
 

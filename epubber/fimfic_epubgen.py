@@ -1,16 +1,21 @@
+from __future__ import absolute_import
 
 import sys, re, time, cgi
 import requests
 import urlparse
 import textwrap
 
-from xml.dom.minidom import parseString as xmlParseString
-from fixtags import FixTagsHtmlParser
-from epubgen import ePubGenerator
+import clay.config
 from HTMLParser import HTMLParser
+
+from epubber.fixtags import FixTagsHtmlParser
+from epubber.epubgen import ePubGenerator
  
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
+
+errorlog = clay.config.get_logger('epubber_error')
 
 
 class BodyFileHtmlParser(HTMLParser):
@@ -23,6 +28,7 @@ class BodyFileHtmlParser(HTMLParser):
     _image_cb = None
     self_closing_tags = [ 'br', 'hr', 'img', 'meta', 'link', 'input' ]
 
+
     def __init__(self):
         self.chapters_data = []
         self.tag_stack = []
@@ -32,6 +38,7 @@ class BodyFileHtmlParser(HTMLParser):
         self._chapter_cb = None
         self._image_cb = None
         HTMLParser.__init__(self)
+
 
     def _esc(self, s):
         safe_entities = [
@@ -45,6 +52,7 @@ class BodyFileHtmlParser(HTMLParser):
             s = s.replace(ch,ent)
         return s
 
+
     def _attrstr(self,attrs):
         out = ''
         for key,val in attrs:
@@ -54,11 +62,14 @@ class BodyFileHtmlParser(HTMLParser):
                 out += ' %s="%s"' % (key,self._esc(val))
         return out
 
+
     def set_chapter_cb(self, cb):
         self._chapter_cb = cb
 
+
     def set_image_cb(self, cb):
         self._image_cb = cb
+
 
     def chapter_complete(self):
         chaptitle = self._chapter_title.strip()
@@ -73,6 +84,7 @@ class BodyFileHtmlParser(HTMLParser):
             self._chapter_title = ''
             self._curr_data = ''
             self._item_data = ''
+
 
     def handle_starttag(self, tag, attrs):
         tag = tag.lower()
@@ -109,6 +121,7 @@ class BodyFileHtmlParser(HTMLParser):
         else:
             self._curr_data += '<%s%s>' % (tag, self._attrstr(attrs))
 
+
     def handle_endtag(self, tag):
         tag = tag.lower()
         if tag == 'body':
@@ -129,6 +142,7 @@ class BodyFileHtmlParser(HTMLParser):
         if tag not in self.self_closing_tags:
             self._curr_data += '</%s>' % tag
 
+
     def handle_data(self, data):
         if len(self.tag_stack) == 0:
             return
@@ -137,8 +151,10 @@ class BodyFileHtmlParser(HTMLParser):
         elif self._chapter_title:
             self._curr_data += data
 
+
     def handle_entityref(self, name):
         self.handle_data('&%s;' % name)
+
 
     def handle_charref(self, name):
         self.handle_data('&#%s;' % name)
@@ -486,10 +502,13 @@ class FimFictionEPubGenerator(ePubGenerator):
             try:
                 resp = requests.get(desc_url,cookies=cookies)
             except requests.exceptions.RequestException, e:
+                errorlog.exception('Failed to HTTP GET file at %s' % desc_url)
                 break
             if resp.status_code == 200:
                 break
             if resp.status_code == 404:
+                errorlog.warning('Got 404 on trying to HTTP GET file at %s' % desc_url)
+                resp = None
                 break
             time.sleep(2*(2**retry))
 
@@ -560,6 +579,9 @@ class FimFictionEPubGenerator(ePubGenerator):
         self.set_meta('short_name', short_name)
         self.set_meta('epub_file', epub_file)
         self.set_meta('cssfile', 'styles.css')
+
+        errorlog.debug(str(self.metas))
+
         return epub_file
 
 
@@ -575,10 +597,13 @@ class FimFictionEPubGenerator(ePubGenerator):
             try:
                 resp = requests.get(body_url, cookies=cookies)
             except requests.exceptions.RequestException, e:
+                errorlog.exception('Failed to HTTP GET file at %s' % body_url)
                 break
             if resp.status_code == 200:
                 break
             if resp.status_code == 404:
+                errorlog.warning('Got 404 on trying to HTTP GET file at %s' % body_url)
+                resp = None
                 break
             time.sleep(2*(2**retry))
 

@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 
 import re, os, sys
-from time import time
-from clay import app, config
+
+from clay import app
+import clay.config
 from flask import make_response, request, redirect, render_template, url_for
+
 from epubber.fimfic_epubgen import FimFictionEPubGenerator
 
 
@@ -11,6 +13,8 @@ site_epub_classes = [
     FimFictionEPubGenerator
 ]
 
+
+accesslog = clay.config.get_logger('epubber_access')
 
 
 #####################################################################
@@ -26,7 +30,7 @@ def main_view():
             epgen = epgenclass()
             if epgen.handle_url(story):
                 epub_file,data = epgen.gen_epub()
-                print('%(title)s - %(url)s' % epgen.metas)
+                accesslog.info('%(title)s - %(url)s' % epgen.metas)
                 del epgen
                 response = make_response(data)
                 response.headers["Content-Type"] = "application/epub+zip"
@@ -97,7 +101,7 @@ def main():
     sys.setdefaultencoding('utf-8')
 
     # App Config
-    app.secret_key = config.get('flask.secret_key')
+    app.secret_key = clay.config.get('flask.secret_key')
 
 
 

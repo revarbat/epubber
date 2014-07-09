@@ -3,11 +3,15 @@ import time
 import requests
 import zipfile
 
+import clay.config
+
 from io import BytesIO
  
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+
+errorlog = clay.config.get_logger('epubber_error')
 
 
 class MemZip():
@@ -36,10 +40,12 @@ class MemZip():
             try:
                 resp = requests.get(url, stream=True)
             except requests.exceptions.RequestException, e:
+                errorlog.exception('Failed to HTTP GET file at %s' % url)
                 break
             if resp.status_code == 200:
                 break
             if resp.status_code == 404:
+                errorlog.warning('Got 404 on trying to HTTP GET file at %s' % url)
                 break
             time.sleep(2*(2**retry))
         if not resp:

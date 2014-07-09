@@ -136,7 +136,6 @@ class FixTagsHtmlParser(HTMLParser):
                         poptag,popbody = self.popped_tags.pop()
                         self.tag_stack.append( (poptag, popbody) )
                         self.out_f.write("<%s%s>" % (poptag, popbody))
-        #print(self._dump(tag))
 
 
     def handle_endtag(self, tag):
@@ -171,7 +170,6 @@ class FixTagsHtmlParser(HTMLParser):
                             break
                         if poptag in self.span_tags:
                             self.popped_tags.append( (poptag, popbody) )
-        #print(self._dump('/'+tag))
 
 
     def handle_data(self, data):
