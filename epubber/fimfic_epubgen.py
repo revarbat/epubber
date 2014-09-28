@@ -567,12 +567,12 @@ class FimFictionEPubGenerator(ePubGenerator):
         tzed = time.strftime("%z")
         created_at = time.strftime("%Y-%m-%dT%H:%M:%S") + tzed[:3] + ':' + tzed[3:]
 
-        for key,val in data.iteritems():
-            self.set_meta(key, val)
-
-        short_name = re.sub(r'&[^;]*;', '', self.metas['title'])
+        short_name = re.sub(r'&[^;]*;', '', data['title'])
         short_name = re.sub(r'[^a-zA-Z0-9_-]', '', short_name)
         epub_file = "%s.epub" % short_name
+
+        for key,val in data.iteritems():
+            self.set_meta(key, val)
 
         self.set_meta('url', desc_url)
         self.set_meta('creationdate', created_at)
@@ -580,6 +580,7 @@ class FimFictionEPubGenerator(ePubGenerator):
         self.set_meta('epub_file', epub_file)
         self.set_meta('cssfile', 'styles.css')
 
+        print(str(self.metas))
         errorlog.debug(str(self.metas))
 
         return epub_file
