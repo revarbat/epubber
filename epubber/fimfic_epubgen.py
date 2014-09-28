@@ -445,7 +445,7 @@ class FimFictionEPubGenerator(ePubGenerator):
         if self.metas['categories']:
             outdata += '\t\t<p class="double">%(categories)s </p>\n'
 
-        outdata += '\t\t%(description)s\n'
+        outdata += '\t\t<p class="double">%(description)s</p>\n'
         outdata += '\t\t<hr />\n'
 
         if self.metas['characters']:
