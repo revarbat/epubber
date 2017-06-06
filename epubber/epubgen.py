@@ -32,10 +32,8 @@ class ePubGenerator():
         self.image_num = 0
         self.metas = {}
 
-
     def set_meta(self, key, val):
         self.metas[key] = val
-
 
     def add_file(self, targfile, tagname=None, mimetype='application/xhtml+xml', title=None, data=None, filename=None, url=None):
         succ = False
@@ -51,7 +49,6 @@ class ePubGenerator():
             self.manifest_files.append( (tagname, targfile, mimetype) )
             if title:
                 self.contents_index.append( (tagname, targfile, title) )
-
 
     def add_image(self, url, tagname=None):
         if url in self.image_urls:
@@ -72,14 +69,12 @@ class ePubGenerator():
         self.image_urls[url] = imgfile
         return imgfile
 
-
     def add_chapter(self, title, data):
         self.chapter_num += 1
         chapfile = "Chapter%d.html" % self.chapter_num
         chaptag = "chapter%d" % self.chapter_num
         self.add_file(chapfile, tagname=chaptag, title=title, mimetype='application/xhtml+xml', data=data)
         return chapfile
-
 
     def add_ncx(self):
         """ Create NCX index file """
@@ -109,7 +104,6 @@ class ePubGenerator():
         outdata += '</ncx>\n'
         outdata = bytes(outdata)
         self.add_file("book.ncx", tagname='ncx', mimetype='application/x-dtbncx+xml', data=outdata)
-
 
     def add_opf(self):
         # Create OPF main metadata file
@@ -149,7 +143,6 @@ class ePubGenerator():
         outdata = bytes(outdata)
         self.add_file("book.opf", data=outdata)
 
-
     def add_base(self):
         outdata = ''
         outdata += '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -161,11 +154,9 @@ class ePubGenerator():
         outdata = bytes(outdata)
         self.add_file("META-INF/container.xml", data=outdata)
 
-
     def add_mimetype(self):
         # Create mimetype file
         self.add_file("mimetype", data="application/epub+zip")
-
 
     def finish(self):
         self.add_ncx()

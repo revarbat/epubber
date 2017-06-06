@@ -28,7 +28,6 @@ class BodyFileHtmlParser(HTMLParser):
     _image_cb = None
     self_closing_tags = [ 'br', 'hr', 'img', 'meta', 'link', 'input' ]
 
-
     def __init__(self):
         self.chapters_data = []
         self.tag_stack = []
@@ -38,7 +37,6 @@ class BodyFileHtmlParser(HTMLParser):
         self._chapter_cb = None
         self._image_cb = None
         HTMLParser.__init__(self)
-
 
     def _esc(self, s):
         safe_entities = [
@@ -52,7 +50,6 @@ class BodyFileHtmlParser(HTMLParser):
             s = s.replace(ch,ent)
         return s
 
-
     def _attrstr(self,attrs):
         out = ''
         for key,val in attrs:
@@ -62,14 +59,11 @@ class BodyFileHtmlParser(HTMLParser):
                 out += ' %s="%s"' % (key,self._esc(val))
         return out
 
-
     def set_chapter_cb(self, cb):
         self._chapter_cb = cb
 
-
     def set_image_cb(self, cb):
         self._image_cb = cb
-
 
     def chapter_complete(self):
         chaptitle = self._chapter_title.strip()
@@ -84,7 +78,6 @@ class BodyFileHtmlParser(HTMLParser):
             self._chapter_title = ''
             self._curr_data = ''
             self._item_data = ''
-
 
     def handle_starttag(self, tag, attrs):
         tag = tag.lower()
@@ -114,13 +107,12 @@ class BodyFileHtmlParser(HTMLParser):
             for key,val in attrs:
                 if key.lower() == 'src':
                     val = self._image_cb(val)
-                newattrs.append( (key,val) )
+                    newattrs.append( (key,val) )
             attrs = newattrs
         if tag in self.self_closing_tags:
             self._curr_data += '<%s%s />' % (tag, self._attrstr(attrs))
         else:
             self._curr_data += '<%s%s>' % (tag, self._attrstr(attrs))
-
 
     def handle_endtag(self, tag):
         tag = tag.lower()
@@ -142,7 +134,6 @@ class BodyFileHtmlParser(HTMLParser):
         if tag not in self.self_closing_tags:
             self._curr_data += '</%s>' % tag
 
-
     def handle_data(self, data):
         if len(self.tag_stack) == 0:
             return
@@ -151,14 +142,11 @@ class BodyFileHtmlParser(HTMLParser):
         elif self._chapter_title:
             self._curr_data += data
 
-
     def handle_entityref(self, name):
         self.handle_data('&%s;' % name)
 
-
     def handle_charref(self, name):
         self.handle_data('&#%s;' % name)
-
 
 
 class FimFictionEPubGenerator(ePubGenerator):
@@ -490,11 +478,11 @@ class FimFictionEPubGenerator(ePubGenerator):
         desc_url = '%s/story/%s' % (self.site_url, self.story_num)
         url_pat = r'<link rel="canonical" href="(.*?)"'
         metapat = r'<meta property="og:([a-z]*)" content="(.*?)"'
-        authpat = r'<span class="author"><a href="/user/.*?>(.*?)<'
-        catapat = r'class="story_category (.*?)".*?>(.*?)</a>'
-        charpat = r'class="character_icon" title="(.*?)"'
-        descpat = r'class="description".*?<hr.*?>(.*?)</div>'
-        imglpat = r'<div class="story_image">\s*<a .*?href="(.*?)"'
+        authpat = r'<a href="/user/.*?" >(.*?)</a>\s*</h1>'
+        catapat = r'class="tag-genre" .*?>(.*?)</a>'
+        charpat = r'class="tag-character" .*?>(.*?)</a>'
+        descpat = r'<span class="description-text bbcode">\s*(.*?)</span>'
+        imglpat = r'<div class="story_container__story_image">\s*<img data-src=".*?" class="lazy-img" data-lightbox data-fullsize="(.*?)" />'
 
         resp = None
         cookies = dict(view_mature='true')
@@ -525,16 +513,19 @@ class FimFictionEPubGenerator(ePubGenerator):
             # Ensure we use the right encoding.
             indata = resp.text.encode(resp.encoding)
 
+            m = re.search(r'<article .*?>(.*?)</article>', indata, re.I|re.DOTALL)
+            articledata = m.group(1)
+
             # Get some story metadata from header.
             for m in re.finditer(metapat, indata, re.I):
                 data[m.group(1)] = m.group(2).strip()
 
             # Get the story categories.
-            for m in re.finditer(catapat, indata, re.I|re.DOTALL):
-                categories.append('<span class="story_category %s">%s</span>' % (m.group(1), m.group(2).strip()))
+            for m in re.finditer(catapat, articledata, re.I|re.DOTALL):
+                categories.append('<span class="story_category">%s</span>' % (m.group(1).strip()))
 
             # Get the characters listed for the story.
-            for m in re.finditer(charpat, indata, re.I|re.DOTALL):
+            for m in re.finditer(charpat, articledata, re.I|re.DOTALL):
                 characters.append(m.group(1).strip())
 
             # Get the official story URL.
@@ -548,7 +539,7 @@ class FimFictionEPubGenerator(ePubGenerator):
                 data['author'] = m.group(1).strip()
 
             # Get the long version of the story description, if possible.
-            m = re.search(descpat, indata, re.I|re.DOTALL)
+            m = re.search(descpat, articledata, re.I|re.DOTALL)
             if m:
                 descr = u'<p class="double">'+m.group(1).strip()
                 descr = fixtags.fixup_string(descr).strip()
@@ -580,7 +571,6 @@ class FimFictionEPubGenerator(ePubGenerator):
         self.set_meta('epub_file', epub_file)
         self.set_meta('cssfile', 'styles.css')
 
-        print(str(self.metas))
         errorlog.debug(str(self.metas))
 
         return epub_file
@@ -588,7 +578,7 @@ class FimFictionEPubGenerator(ePubGenerator):
 
     def add_chapters(self):
         """ Get Story Body and Split Into Chapters. """
-        body_url = '%s/download_story.php?story=%s&html' % (self.site_url, self.story_num)
+        body_url = '%s/story/download/%s/html' % (self.site_url, self.story_num)
         cht_re = re.compile(r'<h3>(.*)</h3>', re.I)
         img_re = re.compile(r'<img ([^>]*)src="([^"]*)"', re.I)
 

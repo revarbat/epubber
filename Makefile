@@ -15,12 +15,12 @@ all: $(ENVDIR) $(EGGS)
 
 env:
 	mkdir $(ENVDIR)
-	virtualenv-2.7 $(ENVDIR)
+	virtualenv --python=python2.7 $(ENVDIR)
 	bash -c "$(ACTIVATE) ; pip2.7 install -r requirements.txt"
 
 
 $(EGGS):
-	bash -c "$(ACTIVATE) ; python setup.py develop"
+	bash -c "$(ACTIVATE) ; python2.7 setup.py develop"
 
 
 run-devel: $(ENVDIR) $(EGGS)

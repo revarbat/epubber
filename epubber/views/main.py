@@ -29,7 +29,7 @@ def main_view():
         for epgenclass in site_epub_classes:
             epgen = epgenclass()
             if epgen.handle_url(story):
-                epub_file,data = epgen.gen_epub()
+                epub_file, data = epgen.gen_epub()
                 accesslog.info('%(title)s - %(url)s' % epgen.metas)
                 del epgen
                 response = make_response(data)
@@ -66,8 +66,7 @@ def static_img_proxy_view(path):
     Make shorter URLs for image files.
     '''
     path = re.sub(r'[^A-Za-z0-9_.-]', r'_', path)
-    thefile = os.path.join('img', path)
-    return redirect(url_for('static', filename=thefile))
+    return redirect(url_for('static', filename=os.path.join('img', path)))
 
 
 @app.route('/js/<path>', methods=['GET', 'POST'])
@@ -76,8 +75,7 @@ def static_js_proxy_view(path):
     Make shorter URLs for javascript files.
     '''
     path = re.sub(r'[^A-Za-z0-9_+.-]', r'_', path)
-    thefile = os.path.join('js', path)
-    return redirect(url_for('static', filename=thefile))
+    return redirect(url_for('static', filename=os.path.join('js', path)))
 
 
 @app.route('/css/<path>', methods=['GET', 'POST'])
@@ -86,8 +84,7 @@ def static_css_proxy_view(path):
     Make shorter URLs for CSS files.
     '''
     path = re.sub(r'[^A-Za-z0-9_+.-]', r'_', path)
-    thefile = os.path.join('css', path)
-    return redirect(url_for('static', filename=thefile))
+    return redirect(url_for('static', filename=os.path.join('css', path)))
 
 
 
