@@ -478,11 +478,11 @@ class FimFictionEPubGenerator(ePubGenerator):
         desc_url = '%s/story/%s' % (self.site_url, self.story_num)
         url_pat = r'<link rel="canonical" href="(.*?)"'
         metapat = r'<meta property="og:([a-z]*)" content="(.*?)"'
-        authpat = r'<a href="/user/.*?" >(.*?)</a>\s*</h1>'
+        authpat = r'<a href="/user/.*?" >(.*?)</a>.\s*</h1>'
         catapat = r'class="tag-genre" .*?>(.*?)</a>'
         charpat = r'class="tag-character" .*?>(.*?)</a>'
-        descpat = r'<span class="description-text bbcode">\s*(.*?)</span>'
-        imglpat = r'<div class="story_container__story_image">\s*<img data-src=".*?" class="lazy-img" data-lightbox data-fullsize="(.*?)" />'
+        descpat = r'<span class="description-text bbcode">.\s*(.*?)</span>'
+        imglpat = r'<div class="story_container__story_image">.\s*<img data-src=".*?" class="lazy-img" data-lightbox data-fullsize="(.*?)" />'
 
         resp = None
         cookies = dict(view_mature='true')
