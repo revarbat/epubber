@@ -19,13 +19,6 @@ errorlog = clay.config.get_logger('epubber_error')
 
 
 class BodyFileHtmlParser(HTMLParser):
-    chapters_data = []
-    tag_stack = []
-    _curr_data = ''
-    _item_data = ''
-    _chapter_title = ''
-    _chapter_cb = None
-    _image_cb = None
     self_closing_tags = [ 'br', 'hr', 'img', 'meta', 'link', 'input' ]
 
     def __init__(self):
@@ -87,16 +80,25 @@ class BodyFileHtmlParser(HTMLParser):
         if len(self.tag_stack) == 0:
             return
         attrkeys = [key for key,val in attrs]
-        if tag == 'a' and 'name' in attrkeys:
-            self.chapter_complete()
-            self.tag_stack.append('anchor')
+        if tag == 'article':
+            self._chapter_title = ''
+            self._curr_data = ''
+            self._item_data = ''
+            self.tag_stack.append('article')
             return
-        if tag == 'h3' and self.tag_stack[-1] == 'anchor':
+        if tag == 'header' and self.tag_stack[-1] == 'article':
+            self.tag_stack.pop()
+            self.tag_stack.append('header')
+            return
+        if tag == 'h1' and self.tag_stack[-1] == 'header':
             self.tag_stack.pop()
             self.tag_stack.append('chaptitle')
             self._item_data = ''
             return
         if self.tag_stack[-1] == 'chaptitle':
+            return
+        if tag == 'footer':
+            self.chapter_complete()
             return
         if tag == 'iframe':
             return
@@ -122,12 +124,10 @@ class BodyFileHtmlParser(HTMLParser):
             return
         if len(self.tag_stack) == 0:
             return
-        if tag == 'a' and self.tag_stack[-1] == 'anchor':
-            return
-        if tag == 'iframe':
+        if tag in ('iframe', 'header', 'article', 'footer'):
             return
         if self.tag_stack[-1] == 'chaptitle':
-            if tag == 'h3':
+            if tag == 'h1':
                 self._chapter_title = self._item_data
                 self.tag_stack.pop()
             return
@@ -152,13 +152,9 @@ class BodyFileHtmlParser(HTMLParser):
 class FimFictionEPubGenerator(ePubGenerator):
     site_url = 'http://www.fimfiction.net'
     story_num = ''
-    _chapter_title = ''
-    _chapter_data = ''
 
     def __init__(self):
         self.story_num = ''
-        self._chapter_title = ''
-        self._chapter_data = ''
         ePubGenerator.__init__(self)
 
 
@@ -586,6 +582,7 @@ class FimFictionEPubGenerator(ePubGenerator):
         cookies = dict(view_mature='true')
         for retry in range(3):
             try:
+                errorlog.warning('Get Body %s' % body_url)
                 resp = requests.get(body_url, cookies=cookies)
             except requests.exceptions.RequestException, e:
                 errorlog.exception('Failed to HTTP GET file at %s' % body_url)
@@ -602,11 +599,13 @@ class FimFictionEPubGenerator(ePubGenerator):
             return
 
         if resp.status_code == 200:
+            errorlog.warning('Process Body %s' % body_url)
             indata = resp.text.encode(resp.encoding)
             bfhp = BodyFileHtmlParser()
             bfhp.set_chapter_cb(self.add_fim_chapter)
             bfhp.set_image_cb(self.add_inline_image)
             bfhp.feed(indata)
+            errorlog.warning('Processed Body %s' % body_url)
 
 
     def add_cover_image(self):
