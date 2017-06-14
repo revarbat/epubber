@@ -45,7 +45,7 @@ class BodyFileHtmlParser(HTMLParser):
 
     def _attrstr(self,attrs):
         out = ''
-        for key,val in attrs:
+        for key, val in attrs:
             if val is None:
                 out += ' %s' % key
             else:
@@ -74,31 +74,37 @@ class BodyFileHtmlParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         tag = tag.lower()
+        attr_data = {key: val for key, val in attrs}
         if tag == 'body':
             self.tag_stack.append('body')
             return
         if len(self.tag_stack) == 0:
             return
-        attrkeys = [key for key,val in attrs]
-        if tag == 'article':
+        if tag == 'article' and attr_data.get('class') == 'chapter':
             self._chapter_title = ''
             self._curr_data = ''
             self._item_data = ''
-            self.tag_stack.append('article')
+            self.tag_stack.append('chapt')
             return
-        if tag == 'header' and self.tag_stack[-1] == 'article':
+        if tag == 'header' and self.tag_stack[-1] == 'chapt':
             self.tag_stack.pop()
-            self.tag_stack.append('header')
+            self.tag_stack.append('chapheader')
             return
-        if tag == 'h1' and self.tag_stack[-1] == 'header':
-            self.tag_stack.pop()
-            self.tag_stack.append('chaptitle')
-            self._item_data = ''
-            return
-        if self.tag_stack[-1] == 'chaptitle':
+        if self.tag_stack[-1] == 'chapheader':
+            if tag == 'h1':
+                self.tag_stack.pop()
+                self.tag_stack.append('chaptitle')
+                self._item_data = ''
+                return
+            if tag == 'a' and 'href' in attr_data:
+                self._chapter_title = '<a href="%s">%s</a>' % (attr_data['href'], self._chapter_title)
+                self._item_data = ''
             return
         if tag == 'footer':
             self.chapter_complete()
+            self.tag_stack.append('chapfooter')
+            return
+        if self.tag_stack[-1] in ('chaptitle', 'chapfooter'):
             return
         if tag == 'iframe':
             return
@@ -106,10 +112,10 @@ class BodyFileHtmlParser(HTMLParser):
             return
         if tag == 'img':
             newattrs = []
-            for key,val in attrs:
+            for key, val in attrs:
                 if key.lower() == 'src':
                     val = self._image_cb(val)
-                    newattrs.append( (key,val) )
+                    newattrs.append( (key, val) )
             attrs = newattrs
         if tag in self.self_closing_tags:
             self._curr_data += '<%s%s />' % (tag, self._attrstr(attrs))
@@ -119,16 +125,28 @@ class BodyFileHtmlParser(HTMLParser):
     def handle_endtag(self, tag):
         tag = tag.lower()
         if tag == 'body':
-            self.chapter_complete()
             self.tag_stack = []
             return
         if len(self.tag_stack) == 0:
             return
-        if tag in ('iframe', 'header', 'article', 'footer'):
+        if tag in ('iframe', 'article'):
+            return
+        if self.tag_stack[-1] == 'chapheader':
+            if tag == 'header':
+                self.tag_stack.pop()
+            if tag == 'a':
+                self._item_data = ''
+                self._curr_data = ''
             return
         if self.tag_stack[-1] == 'chaptitle':
             if tag == 'h1':
                 self._chapter_title = self._item_data
+                self._item_data = ''
+                self.tag_stack.pop()
+                self.tag_stack.append('chapheader')
+            return
+        if self.tag_stack[-1] == 'chapfooter':
+            if tag == 'footer':
                 self.tag_stack.pop()
             return
         if tag not in self.self_closing_tags:
@@ -558,7 +576,7 @@ class FimFictionEPubGenerator(ePubGenerator):
         short_name = re.sub(r'[^a-zA-Z0-9_-]', '', short_name)
         epub_file = "%s.epub" % short_name
 
-        for key,val in data.iteritems():
+        for key, val in data.iteritems():
             self.set_meta(key, val)
 
         self.set_meta('url', desc_url)
@@ -582,7 +600,6 @@ class FimFictionEPubGenerator(ePubGenerator):
         cookies = dict(view_mature='true')
         for retry in range(3):
             try:
-                errorlog.warning('Get Body %s' % body_url)
                 resp = requests.get(body_url, cookies=cookies)
             except requests.exceptions.RequestException, e:
                 errorlog.exception('Failed to HTTP GET file at %s' % body_url)
@@ -599,13 +616,11 @@ class FimFictionEPubGenerator(ePubGenerator):
             return
 
         if resp.status_code == 200:
-            errorlog.warning('Process Body %s' % body_url)
             indata = resp.text.encode(resp.encoding)
             bfhp = BodyFileHtmlParser()
             bfhp.set_chapter_cb(self.add_fim_chapter)
             bfhp.set_image_cb(self.add_inline_image)
             bfhp.feed(indata)
-            errorlog.warning('Processed Body %s' % body_url)
 
 
     def add_cover_image(self):
