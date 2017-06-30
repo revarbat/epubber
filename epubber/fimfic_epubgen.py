@@ -7,6 +7,7 @@ import textwrap
 
 import clay.config
 from HTMLParser import HTMLParser
+from pprint import pformat
 
 from epubber.fixtags import FixTagsHtmlParser
 from epubber.epubgen import ePubGenerator
@@ -492,7 +493,7 @@ class FimFictionEPubGenerator(ePubGenerator):
         desc_url = '%s/story/%s' % (self.site_url, self.story_num)
         url_pat = r'<link rel="canonical" href="(.*?)"'
         metapat = r'<meta property="og:([a-z]*)" content="(.*?)"'
-        authpat = r'<a href="/user/.*?" >(.*?)</a>.\s*</h1>'
+        authpat = r'<a href="/user/.*?" >([^<]*?)</a>(.\s*<a class="[^"]*" href="/patreon" style="[^"]*"></a>)?.\s*</h1>'
         catapat = r'class="tag-genre" .*?>(.*?)</a>'
         charpat = r'class="tag-character" .*?>(.*?)</a>'
         descpat = r'<span class="description-text bbcode">.\s*(.*?)</span>'
@@ -585,7 +586,7 @@ class FimFictionEPubGenerator(ePubGenerator):
         self.set_meta('epub_file', epub_file)
         self.set_meta('cssfile', 'styles.css')
 
-        errorlog.debug(str(self.metas))
+        errorlog.debug(pformat(self.metas))
 
         return epub_file
 
